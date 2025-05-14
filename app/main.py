@@ -13,11 +13,18 @@ app = FastAPI()
 class QueryRequest(BaseModel):
     user_input: str
 
+
+@app.get("/")
+def root():
+    return {"message": "Prompt to API Agent is running"}   
+
+
 @app.post("/query")
 async def query_route(request: QueryRequest):
     try:     
         #interpret the user input using GPT4
         parsed = interpret_user_input(request.user_input) 
+        print(f"Parsed response: {parsed}") 
         api = parsed.get("api")      
         params = parsed.get("parameters", {})   
            
@@ -38,5 +45,4 @@ async def query_route(request: QueryRequest):
        
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))   
-    
     

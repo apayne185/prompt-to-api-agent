@@ -1,21 +1,29 @@
+from dotenv import load_dotenv
+load_dotenv()
 import openai
+from openai import OpenAI
 import os
 import json
-from dotenv import load_dotenv
 
-load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-
+client = OpenAI()
 
 def build_prompt(user_input: str) -> str:
-    return (
-        f"You are an assistant that determines the type of API to call based on user input.  \n"  
-        f"Given the user's request: \"{user_input}\", identify the API ('weather' or 'news') "   
-        f"and the necessary parameters.\n"   
-        f"Respond strictly in this exact JSON format:\n"     
-        f"{{\"api\": \"weather\", \"parameters\": {{\"location\": \"Madrid\"}}}}"    
-    )    
+        return f"""
+            Given this user input: "{user_input}", identify whether the user is asking for weather or news.
+
+            Return ONLY a JSON object with this format:
+            {{
+            "api": "weather",  // or "news"
+            "parameters": {{
+                "location": "CityName"  // for weather
+                "topic": "TopicName"    // for news
+                }}
+            }}
+
+            Do not include any text or explanation.
+            """
 
 
 
@@ -25,17 +33,19 @@ def interpret_user_input(user_input:str) -> dict:
     prompt = build_prompt(user_input)   
 
     try: 
-        response = openai.ChatCompletion.create(  
+        response = client.chat.completions.create(  
             model="gpt-4",
             messages=[   
                 {"role": "system", "content": "You are a prompt routing assistant."},    
                 {"role": "user", "content": prompt},
             ],
             temperature=0.2,  
-            max_tokens=150,
+            max_tokens= 150,
         )    
         
-        reply = response['choices'][0]['message']['content']   
+        # reply = response['choices'][0]['message']['content']   
+        reply = response.choices[0].message.content
+        print("GPT-4 response:", reply) 
         return json.loads(reply)  
     
         
